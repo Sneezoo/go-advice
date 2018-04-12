@@ -11,8 +11,9 @@ EXPOSE 8080
 
 ADD Gopkg.* ./
 
-ADD *.go ./
+COPY *.go ./
+COPY advice ./advice
 RUN dep ensure
-RUN go build -gcflags='-N -l'
+RUN go build -gcflags='-N -l' -tags=jsoniter
 
 ADD *.sh ./
