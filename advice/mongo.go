@@ -34,6 +34,9 @@ func (repo *MongoRepository) Create(advice *Advice) (error, *Advice) {
 }
 
 func (repo *MongoRepository) Search(term string) (error, *Advice) {
+	if term == "" {
+		return errors.New("[No term]"), nil
+	}
 	var advice Advice
 	pipe := repo.Collection.Pipe([]bson.M{
 		{
