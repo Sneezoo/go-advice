@@ -36,16 +36,15 @@ func main() {
 	})
 
 	r.POST("/advice", func(context *gin.Context) {
-		var advice advice.Advice
+		advice := &(advice.Advice{})
 
-		err := context.Bind(&advice)
+		err := context.Bind(advice)
 		if err != nil {
 			raiseError(http.StatusBadRequest, "Couldn't parse Request", err, context)
 			return
 		}
 
-		err = collection.Insert(&advice)
-		if err != nil {
+		if err, advice = repository.Create(advice); advice == nil {
 			raiseError(http.StatusInternalServerError, "Couldn't save to database", err, context)
 			return
 		}
