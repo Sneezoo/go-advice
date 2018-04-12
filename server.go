@@ -5,44 +5,38 @@ import (
 	"os"
 	"github.com/globalsign/mgo"
 	"net/http"
-	"github.com/globalsign/mgo/bson"
-	"errors"
+	"github.com/Sneezoo/advicery/advice"
 )
 
-type Advice struct {
-	Advice string
-	Keywords []string
-	Funny int64
-	Serious int64
-}
-
 var collection *mgo.Collection
+var repository *advice.MongoRepository
 
 func main() {
+	var err error
 	r := gin.Default()
 	mongoHost := os.Getenv("MONGO_HOST")
-	session, err := mgo.Dial(mongoHost)
-	defer session.Close()
-
+	err, repository = (&advice.MongoRepository{}).Init(mongoHost)
+	defer repository.Session.Close()
 	if err != nil {
 		panic(err)
 	}
 
-	db := session.DB("advice")
-	collection = db.C("advice")
-
 	r.GET("/advice", func(context *gin.Context) {
 		keyword := context.Query("term")
-		err, advice := getAdvice(keyword)
-		if err != nil {
-			raiseError(http.StatusNotFound, "Couldn't find advice for keyword", err, context)
+
+		if err, advice := repository.Search(keyword); err == nil {
+			context.JSON(http.StatusOK, advice)
 			return
 		}
-		context.JSON(http.StatusOK, *advice)
+		if err, advice := repository.Random(); err == nil {
+			context.JSON(http.StatusOK, advice)
+			return
+		}
+		raiseError(http.StatusNotFound, "Couldn't find advice for keyword", err, context)
 	})
 
 	r.POST("/advice", func(context *gin.Context) {
-		var advice Advice
+		var advice advice.Advice
 
 		err := context.Bind(&advice)
 		if err != nil {
@@ -64,40 +58,6 @@ func main() {
 	})
 
 	r.Run(":8080")
-}
-
-func getAdvice(keyword string) (error, *Advice) {
-	var advice Advice
-	pipe := collection.Pipe([]bson.M{
-		{
-			"$match": bson.M{
-				"$or": []bson.M{
-					{"keywords": bson.M{"$regex": keyword, "$options": "i"}, },
-					{"advice": bson.M{"$regex": keyword, "$options": "i"}, },
-				},
-			},
-		},
-		{
-			"$sort": bson.M{
-				"serious": -1,
-			},
-		},
-		{
-			"$limit": 1,
-		},
-	})
-	pipeSample := collection.Pipe([]bson.M{{
-		"$sample": bson.M{
-			"size": 1,
-		},
-	}})
-
-	if pipe.Iter().Next(&advice) {
-		return nil, &advice
-	} else if pipeSample.Iter().Next(&advice) {
-		return nil, &advice
-	}
-	return errors.New("[Couldn't find any advice]"), nil
 }
 
 func raiseError(code int16, status string, err error, ctx *gin.Context) {
