@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"github.com/globalsign/mgo/bson"
 	"errors"
-	"github.com/Sneezoo/testproject/advice"
 )
 
 type Advice struct {
@@ -18,7 +17,6 @@ type Advice struct {
 }
 
 var collection *mgo.Collection
-var repo *advice.MongoRepository
 
 func main() {
 	r := gin.Default()

@@ -11,8 +11,8 @@ EXPOSE 8080
 
 ADD Gopkg.* ./
 
-RUN dep ensure
 ADD *.go ./
+RUN dep ensure
 RUN go build -gcflags='-N -l'
 
 ADD *.sh ./
