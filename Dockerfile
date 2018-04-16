@@ -9,11 +9,12 @@ ENTRYPOINT "./advicery"
 
 EXPOSE 8080
 
-ADD Gopkg.* ./
+COPY Gopkg.* ./
 
 COPY *.go ./
 COPY advice ./advice
 RUN dep ensure
 RUN go build -gcflags='-N -l' -tags=jsoniter
 
-ADD *.sh ./
+COPY www/dist ./www
+COPY *.sh ./

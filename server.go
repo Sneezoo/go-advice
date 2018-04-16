@@ -6,6 +6,8 @@ import (
 	"github.com/globalsign/mgo"
 	"net/http"
 	"github.com/Sneezoo/advicery/advice"
+	"path/filepath"
+	"fmt"
 )
 
 var collection *mgo.Collection
@@ -55,6 +57,11 @@ func main() {
 			"advice": advice,
 		})
 	})
+
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	dir = filepath.Join(dir, "www")
+	fmt.Printf("www in %s", dir)
+	r.Static("/www", dir)
 
 	r.Run(":8080")
 }

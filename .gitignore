@@ -1,2 +1,9 @@
 /vendor/
 /.idea/
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+/www-dist/
